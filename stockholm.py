@@ -60,7 +60,7 @@ def ft_encrypt_decrypt(file_path, encrypt, fernet):
             en_de = fernet.decrypt(a_file)
 
     except:
-        print("Decrypt proccess not posible.")
+        print("Something has fail.")
         return
 
     with open(file_path, "wb") as f:
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     #Comprobación de la carpeta infection.
     if not os.path.exists(PATH):
         if not arg.silent:
-            print("... there is not directory: ", PATH)
+            print("Infection directory doesn't exist in " + HOME + "/stockholm/")
 
     # Crea la clave de encriptado si no existe
     if not os.path.exists(KEY_FILE) and not arg.reverse:
